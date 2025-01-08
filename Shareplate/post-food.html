@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post Excess Food - Share Plate</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>Post Excess Food</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="food-list.html">View Available Food</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <h2>Enter Food Details</h2>
+      <form id="post-food-form">
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" required>
+        <label for="description">Food Description:</label>
+        <textarea id="description" name="description" required></textarea>
+        <label for="quantity">Quantity:</label>
+        <input type="number" id="quantity" name="quantity" required>
+        <label for="photo">Photo (optional):</label>
+        <input type="file" id="photo" name="photo">
+        <button type="submit">Submit</button>
+      </form>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2024 Share Plate</p>
+  </footer>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
