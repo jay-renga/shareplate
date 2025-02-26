@@ -1,4 +1,10 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+
+
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -15,31 +21,35 @@ if ($conn->connect_error) {
 // Get the food item ID from the URL
 $food_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
-// Fetch the food item from the database
-$sql = "SELECT * FROM food_items WHERE id = $food_id";
 
-
-$result = $conn->query($sql);
 
 // Handle form submission
 // Process request form submission
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-  
+ 
     // Retrieve form data
     $name = $_POST["name"];
     $phone = $_POST["phone"];
     $message = $_POST["message"];
     $food_id = $_POST["food_id"];
+    $qty = $_POST["req_qty"];
     $posted = date('Y-m-d H:i:s');
+    $location = $_POST['location'];
     // Save request to database
-    $sql = "INSERT INTO requests (name, phone, message, food_id, posted_on) VALUES ('$name', '$phone', '$message','$food_id', '$posted')";
+    $sql = "INSERT INTO requests (name, phone, message, food_id, posted_on, req_qty, location) VALUES ('$name', '$phone', '$message','$food_id', '$posted', '$qty', '$location')";
+    $sql1= "UPDATE food_items SET req_quantity = req_quantity + ".$qty." WHERE id = ".$food_id.";";
     if ($conn->query($sql) === TRUE) {
+     $conn->query($sql1);
         echo "<p class='alert alert-success'>Request submitted successfully!</p>";
     } else {
         echo "<p class='alert alert-danger'>Error: " . $sql . "<br>" . $conn->error . "</p>";
     }
 }
+// Fetch the food item from the database
+$sql = "SELECT * FROM food_items WHERE id = $food_id";
 
+
+$result = $conn->query($sql); 
 // Fetch comments (requests) from database
 $sql = "SELECT * FROM requests where food_id='$food_id'";
 $result1 = $conn->query($sql);
@@ -98,7 +108,7 @@ $result1 = $conn->query($sql);
         <li><a href="index.html#hero" class="">Home<br></a></li>
           <li><a href="index.html#about">About us</a></li>
           <li><a href="index.html#why-us">Why us</a></li>
-          <li><a href="index.html#chefs">Our Team</a></li>
+        <!--  <li><a href="index.html#chefs">Our Team</a></li>-->
           <li><a href="index.html#testimonials">Feedback</a></li>
           <li><a href="index.html#events">Events</a></li>
           <li><a href="index.html#contact">Contact Us</a></li>
@@ -107,6 +117,8 @@ $result1 = $conn->query($sql);
       </nav>
       <a class="btn-getstarted" href="foods.php "> Food List</a>
       <a class="btn-getstarted" href="index.html#book-a-table ">Post Food</a>
+      <a class="btn-getstarted" href="index.html#donate "> Donate</a>
+
     </div>
   </header>
 
@@ -116,7 +128,9 @@ $result1 = $conn->query($sql);
         
         <!-- Display food details here -->
         <?php if ($result->num_rows > 0): ?>
-            <?php while($row = $result->fetch_assoc()): ?>
+            <?php while($row = $result->fetch_assoc()): 
+              $req_qty =$row['req_quantity'];
+              $qty = $row['quantity'];?>
                    
                         <div class="card h-100">
                             
@@ -133,6 +147,19 @@ $result1 = $conn->query($sql);
                                             <strong>Location:</strong> <?php echo htmlspecialchars($row['location']); ?><br>
                                             <strong>Message:</strong> <?php echo htmlspecialchars($row['message']); ?><br>
                                             <strong>Posted on:</strong> <?php echo htmlspecialchars($row['created_on']); ?>
+                                            <div class="col-md-6 mb-4"><br/>
+                                              <table class="table table-bordered"><tr>
+                                              <td class="align-middle">
+                                               <div class="col-md-12 d-flex justify-content-center text-info"><strong class="text-warning  justify-content-center" ><span style="font-size: 40px;"><?php if(($row['quantity']) !=0){ ?><i class="bi bi-basket2-fill"></i>  <?php }else { ?> <i class="bi bi-basket3"></i>  <?php } ?><?php echo htmlspecialchars($row['quantity']); ?></br></span>   Posted</strong></div>
+                                                </td><td class="align-middle">
+                                               <div class="col-md-12 d-flex justify-content-center text-success"><strong class="text-success  justify-content-center" ><span style="font-size: 40px;"><?php if(($row['quantity']-$row['req_quantity']) !=0){ ?><i class="bi bi-basket2-fill"></i>  <?php }else { ?> <i class="bi bi-basket3"></i>  <?php } ?><?php echo htmlspecialchars($row['quantity']-$row['req_quantity']); ?></br></span>   Available</strong></div>
+                                                </td>
+                                                <td class="align-middle">
+                                               <div class="col-md-12 d-flex justify-content-center text-danger"><strong class="text-danger  justify-content-center" ><span style="font-size: 40px;"><?php if($row['req_quantity'] !=0){ ?><i class="bi bi-basket2-fill"></i>  <?php }else { ?> <i class="bi bi-basket3"></i>  <?php } ?><?php echo htmlspecialchars($row['req_quantity']); ?></br></span>   Requested</strong></div>
+                                                </td>
+                                                </tr>
+                                                </table>
+                                            </div>
                                         </p>
                                     </div>
                                     <div class="col-md-4 mb-4">   
@@ -178,15 +205,20 @@ $result1 = $conn->query($sql);
         <hr>
 
         <h2 class="my-4">Request Food</h2>
-        <form action="viewfood.php?id=<?php echo $food_id; ?>" method="post">
-            <div class="form-group">
-                <label for="name">Your Name</label>
+        <?php if($req_qty < $qty){ ?>
+        <form action="viewfood.php?id=<?php echo $food_id;?>" class="row g-3" method="post">
+        <div class="form-group col-md-6">              
                 <input type="hidden" class="form-control" id="food_id" name="food_id" value="<?php echo $food_id;?>">
-                <input type="text" class="form-control" id="name" name="name" required>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Name" required>
             </div>
-            <div class="form-group">
-                <label for="phone">Your Phone</label>
-                <input type="tel" class="form-control" id="phone" name="phone" required>
+            <div class="form-group col-md-6">              
+                <input type="text" class="form-control" id="location" name="location" placeholder="Location" required>
+            </div>
+            <div class="form-group col-md-6">              
+                <input type="tel" class="form-control" id="phone" name="phone" placeholder="Phone" required>
+            </div>
+            <div class="form-group col-md-6">               
+                <input type="number" class="form-control" id="req_qty" name="req_qty" placeholder="Required Quantity" required max="<?php echo $qty-$req_qty;?>">
             </div>
             <div class="form-group">
                 <label for="message">Message (Optional)</label>
@@ -195,6 +227,9 @@ $result1 = $conn->query($sql);
             <br/>
             <button type="submit" class="btn btn-primary">Submit Request</button>
         </form>
+        <?php }else{ ?>
+            "Sorry we already we have recived maximum requests."
+        <?php } ?>
         <hr>
 
         <h2 class="my-4">Responses</h2>
@@ -202,7 +237,7 @@ $result1 = $conn->query($sql);
             <ul class="list-group">
                 <?php while($row = $result1->fetch_assoc()): ?>
                     <li class="list-group-item">
-                        <strong><?php echo $row["name"]; ?>:</strong> <?php echo $row["message"]; ?>
+                        <strong><?php echo $row["name"]; ?></strong>  has requested <?php echo $row["req_qty"]; ?>  quantity, from  <?php echo $row["location"]; ?>                      
                     </li>
                 <?php endwhile; ?>
             </ul>

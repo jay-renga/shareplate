@@ -23,7 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $message = $_POST['message'];
     $created = date('Y-m-d H:i:s');
     $photo = "";
-
+    
     // Handle file upload
     if (!empty($_FILES['photo']['name'])) {
         $target_dir = "uploads/";
